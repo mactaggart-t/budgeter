@@ -216,3 +216,24 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# ── Node / Frontend ──────────────────────────────────────────────────────────
+node_modules/
+dist/
+.next/
+out/
+.nuxt/
+.output/
+.cache/
+*.local
+
+# Vite
+frontend/dist/
+frontend/.vite/
+
+# env overrides (keep examples, ignore actual secrets)
+.env.local
+.env.*.local
+
+# TypeScript build info
+*.tsbuildinfo
