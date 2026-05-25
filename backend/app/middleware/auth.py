@@ -16,7 +16,7 @@ from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwk, jwt
 from jose.utils import base64url_decode
 
-from app.config import Settings, get_settings
+from app.core.config import Settings, get_settings
 
 _bearer = HTTPBearer()
 

@@ -4,15 +4,13 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.config import get_settings
-from app.database import engine
-from app.models import user as _user_models  # noqa: F401 – registers models
-from app.routers import health, users
+from app.core.config import get_settings
+from app.core.db import engine
+from app.api import auth, households
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Nothing to start up for now; place DB migration checks here if desired.
     yield
     await engine.dispose()
 
@@ -22,7 +20,7 @@ def create_app() -> FastAPI:
 
     app = FastAPI(
         title=settings.app_name,
-        description="Personal finance API – tracks spending and forecasts savings.",
+        description="Personal finance API - tracks spending and forecasts savings.",
         version="0.1.0",
         lifespan=lifespan,
         docs_url="/docs",
@@ -37,8 +35,8 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    app.include_router(health.router)
-    app.include_router(users.router)
+    app.include_router(auth.router)
+    app.include_router(households.router)
 
     return app
 
