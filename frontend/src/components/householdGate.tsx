@@ -1,5 +1,6 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useGetMyHouseholdQuery } from "@/store/householdApi";
+import { clearInviteToken, getInviteToken } from "@/auth/inviteToken";
 import CreateHousehold from "@/pages/createHousehold";
 import JoinHousehold from "@/pages/joinHousehold";
 import {
@@ -16,12 +17,16 @@ type Props = { children: React.ReactNode };
 type OnboardingView = "choose" | "create" | "join";
 
 export default function HouseholdGate({ children }: Props) {
-  const inviteToken = new URLSearchParams(window.location.search).get("token");
+  const [inviteToken] = useState(getInviteToken);
 
   const { isLoading, isSuccess, isError, error } = useGetMyHouseholdQuery();
   const is404 = isError && (error as any)?.status === 404;
 
   const [view, setView] = useState<OnboardingView>(inviteToken ? "join" : "choose");
+
+  useEffect(() => {
+    if (isSuccess) clearInviteToken();
+  }, [isSuccess]);
 
   if (isLoading) {
     return (

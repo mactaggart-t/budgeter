@@ -5,6 +5,9 @@ import { Auth0Provider, useAuth0 } from "@auth0/auth0-react";
 import { store } from "@/store/store";
 import { setTokenGetter } from "@/store/householdApi";
 import App from "@/App";
+import { captureInviteToken } from "@/auth/inviteToken";
+
+captureInviteToken();
 
 function TokenBridge({ children }: { children: React.ReactNode }) {
   const { getAccessTokenSilently } = useAuth0();

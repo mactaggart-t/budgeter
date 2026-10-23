@@ -1,17 +1,20 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { useAuth0 } from "@auth0/auth0-react";
+import { Box, CircularProgress } from "@mui/material";
 import AuthCallback from "@/pages/authCallback";
 import HouseholdGate from "@/components/householdGate";
 import HouseholdSettings from "@/pages/householdSettings";
+import NavBar from "@/components/NavBar";
+import Dashboard from "@/pages/Dashboard";
 
 function AppRoutes() {
   const { isLoading, isAuthenticated, loginWithRedirect } = useAuth0();
 
   if (isLoading) {
     return (
-      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <div className="spinner" />
-      </div>
+      <Box sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <CircularProgress />
+      </Box>
     );
   }
 
@@ -21,13 +24,17 @@ function AppRoutes() {
   }
 
   return (
-    <HouseholdGate>
-      <Routes>
-        <Route path="/" element={<Navigate to="/household" replace />} />
-        <Route path="/household" element={<HouseholdSettings />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </HouseholdGate>
+    <>
+      <NavBar />
+      <HouseholdGate>
+        <Routes>
+          <Route path="/" element={<Navigate to="/household" replace />} />
+          <Route path="/household" element={<HouseholdSettings />} />
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </HouseholdGate>
+    </>
   );
 }
 
@@ -96,16 +103,4 @@ const globalStyles = `
     to   { opacity: 1; transform: translateY(0); }
   }
 
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
-
-  .spinner {
-    width: 36px;
-    height: 36px;
-    border-radius: 50%;
-    border: 2px solid var(--border);
-    border-top-color: var(--accent);
-    animation: spin 0.8s linear infinite;
-  }
 `;

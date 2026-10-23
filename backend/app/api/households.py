@@ -1,14 +1,15 @@
+import secrets
 from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
+from sqlalchemy import func, select
 from app.core.db import get_db
 from app.core.auth import get_current_user
 from app.models.auth import Household, HouseholdInvite, User
 from app.schemas.household import (
     HouseholdCreate, HouseholdResponse,
     InviteCreate, InviteResponse,
-    JoinRequest,
+    JoinRequest, MemberResponse
 )
 
 router = APIRouter(prefix="/households", tags=["households"])
@@ -49,6 +50,18 @@ async def get_my_household(
         raise HTTPException(404, "Household not found")
     return household
 
+@router.get("/me/members", response_model=list[MemberResponse])
+async def get_household_members(
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    if not current_user.household_id:
+        raise HTTPException(404, "You are not in a household")
+
+    result = await db.execute(
+        select(User).where(User.household_id == current_user.household_id)
+    )
+    return result.scalars().all()
 
 @router.post("/invite", response_model=InviteResponse, status_code=201)
 async def invite_to_household(
@@ -59,21 +72,33 @@ async def invite_to_household(
     if not current_user.household_id:
         raise HTTPException(403, "You must be in a household to invite someone")
 
+    invited_email = body.email.lower()
+
     # Check for an existing pending invite for this email
     result = await db.execute(
         select(HouseholdInvite).where(
             HouseholdInvite.household_id == current_user.household_id,
-            HouseholdInvite.invited_email == body.email,
+            func.lower(HouseholdInvite.invited_email) == invited_email,
             HouseholdInvite.status == "pending",
         )
     )
-    if result.scalar_one_or_none():
-        raise HTTPException(409, "A pending invite already exists for this email")
+    existing = result.scalar_one_or_none()
+    expires_at = datetime.now(timezone.utc) + timedelta(hours=48)
+
+    if existing:
+        if existing.expires_at > datetime.now(timezone.utc):
+            raise HTTPException(409, "A pending invite already exists for this email")
+        # Reissue the lapsed invite instead of blocking the address forever
+        existing.token = secrets.token_urlsafe(32)
+        existing.expires_at = expires_at
+        await db.commit()
+        await db.refresh(existing)
+        return existing
 
     invite = HouseholdInvite(
         household_id=current_user.household_id,
-        invited_email=body.email,
-        expires_at=datetime.now(timezone.utc) + timedelta(hours=48),
+        invited_email=invited_email,
+        expires_at=expires_at,
     )
     db.add(invite)
     await db.commit()
@@ -103,6 +128,8 @@ async def join_household(
         invite.status = "expired"
         await db.commit()
         raise HTTPException(410, "Invite has expired")
+    if invite.invited_email.lower() != current_user.email.lower():
+        raise HTTPException(403, "This invite was sent to a different email address")
 
     invite.status = "accepted"
     current_user.household_id = invite.household_id

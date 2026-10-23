@@ -1,60 +1,82 @@
 import { useAuth0 } from '@auth0/auth0-react'
-import { Link } from 'react-router-dom'
+import { AppBar, Avatar, Box, Button, CircularProgress, Toolbar, Typography } from '@mui/material'
+import { Link, useLocation } from 'react-router-dom'
+
+const NAV_LINKS = [
+  { label: 'Dashboard', path: '/dashboard', requiresAuth: true },
+  { label: 'Household', path: '/household', requiresAuth: true },
+]
 
 export default function NavBar() {
-  const { isAuthenticated, isLoading, loginWithRedirect, logout, user } =
-    useAuth0()
+  const { isAuthenticated, isLoading, loginWithRedirect, logout, user } = useAuth0()
+  const location = useLocation()
 
   return (
-    <nav className="bg-white shadow-sm">
-      <div className="mx-auto flex max-w-5xl items-center justify-between px-4 py-3">
-        {/* Logo / brand */}
-        <Link to="/" className="text-xl font-bold text-brand-600">
-          💰 Budgeter
-        </Link>
+    <AppBar position="sticky" elevation={1} sx={{ bgcolor: 'background.paper', color: 'text.primary' }}>
+      <Toolbar sx={{ maxWidth: 'lg', width: '100%', mx: 'auto', px: { xs: 2, sm: 3 }, gap: 2 }}>
+        <Typography
+          component={Link}
+          to="/"
+          variant="h6"
+          sx={{ color: 'primary.main', fontWeight: 700, textDecoration: 'none', flexShrink: 0 }}
+        >
+          Budgeter
+        </Typography>
 
-        {/* Nav links */}
-        <div className="flex items-center gap-4">
-          {isAuthenticated && (
-            <Link
-              to="/dashboard"
-              className="text-sm font-medium text-gray-600 hover:text-brand-600"
-            >
-              Dashboard
-            </Link>
-          )}
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flex: 1 }}>
+          {isAuthenticated &&
+            NAV_LINKS.map(({ label, path }) => (
+              <Button
+                key={path}
+                component={Link}
+                to={path}
+                size="small"
+                sx={{
+                  color: location.pathname === path ? 'primary.main' : 'text.secondary',
+                  fontWeight: location.pathname === path ? 700 : 400,
+                  textTransform: 'none',
+                  '&:hover': { color: 'primary.main', bgcolor: 'primary.50' },
+                }}
+              >
+                {label}
+              </Button>
+            ))}
+        </Box>
 
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flexShrink: 0 }}>
           {isLoading ? (
-            <span className="text-sm text-gray-400">Loading…</span>
+            <CircularProgress size={20} />
           ) : isAuthenticated ? (
-            <div className="flex items-center gap-3">
-              {user?.picture && (
-                <img
-                  src={user.picture}
-                  alt={user.name ?? 'avatar'}
-                  className="h-8 w-8 rounded-full"
-                />
-              )}
-              <span className="text-sm text-gray-700">{user?.name}</span>
-              <button
-                onClick={() =>
-                  logout({ logoutParams: { returnTo: window.location.origin } })
-                }
-                className="rounded bg-gray-100 px-3 py-1 text-sm text-gray-600 hover:bg-gray-200"
+            <>
+              <Avatar
+                src={user?.picture}
+                alt={user?.name ?? 'avatar'}
+                sx={{ width: 32, height: 32 }}
+              />
+              <Typography variant="body2" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' } }}>
+                {user?.name}
+              </Typography>
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={() => logout({ logoutParams: { returnTo: window.location.origin } })}
+                sx={{ textTransform: 'none' }}
               >
                 Log out
-              </button>
-            </div>
+              </Button>
+            </>
           ) : (
-            <button
+            <Button
+              variant="contained"
+              size="small"
               onClick={() => loginWithRedirect()}
-              className="rounded bg-brand-600 px-4 py-1.5 text-sm font-medium text-white hover:bg-brand-700"
+              sx={{ textTransform: 'none' }}
             >
               Log in
-            </button>
+            </Button>
           )}
-        </div>
-      </div>
-    </nav>
+        </Box>
+      </Toolbar>
+    </AppBar>
   )
 }

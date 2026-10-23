@@ -1,5 +1,6 @@
 import { type ReactNode } from 'react'
 import { useAuth0 } from '@auth0/auth0-react'
+import { CircularProgress, Stack, Typography } from '@mui/material'
 
 interface PrivateRouteProps {
   children: ReactNode
@@ -15,9 +16,10 @@ export default function PrivateRoute({ children }: PrivateRouteProps) {
 
   if (isLoading) {
     return (
-      <div className="flex h-64 items-center justify-center">
-        <span className="text-gray-400">Loading…</span>
-      </div>
+      <Stack spacing={2} sx={{ alignItems: 'center', justifyContent: 'center', minHeight: 256 }}>
+        <CircularProgress />
+        <Typography color="text.secondary">Loading…</Typography>
+      </Stack>
     )
   }
 

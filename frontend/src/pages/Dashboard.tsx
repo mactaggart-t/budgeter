@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useAuth0 } from '@auth0/auth0-react'
+import { Alert, Box, CircularProgress, Paper, Stack, Typography } from '@mui/material'
 
 interface UserProfile {
   id: string
@@ -38,21 +39,29 @@ export default function Dashboard() {
   }, [getAccessTokenSilently])
 
   return (
-    <div className="space-y-8">
-      <h1 className="text-3xl font-bold text-gray-900">Dashboard</h1>
+    <Stack spacing={4}>
+      <Typography variant="h4" component="h1">
+        Dashboard
+      </Typography>
 
       {error && (
-        <div className="rounded border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-          {error}
-        </div>
+        <Alert severity="error">{error}</Alert>
       )}
 
       {profile ? (
-        <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-          <h2 className="mb-4 text-lg font-semibold text-gray-800">
+        <Paper variant="outlined" sx={{ p: 3 }}>
+          <Typography variant="h6" component="h2" gutterBottom>
             Your profile
-          </h2>
-          <dl className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+          </Typography>
+          <Box
+            component="dl"
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, minmax(0, 1fr))' },
+              gap: 2,
+              m: 0,
+            }}
+          >
             <ProfileRow label="User ID" value={profile.id} />
             <ProfileRow label="Email" value={profile.email ?? '—'} />
             <ProfileRow
@@ -63,36 +72,38 @@ export default function Dashboard() {
               label="Member since"
               value={new Date(profile.created_at).toLocaleDateString()}
             />
-          </dl>
-        </div>
+          </Box>
+        </Paper>
       ) : (
         !error && (
-          <div className="flex h-40 items-center justify-center text-gray-400">
-            Loading profile…
-          </div>
+          <Stack spacing={2} sx={{ alignItems: 'center', justifyContent: 'center', minHeight: 160 }}>
+            <CircularProgress />
+            <Typography color="text.secondary">Loading profile…</Typography>
+          </Stack>
         )
       )}
 
-      {/* Placeholder spending summary */}
-      <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm">
-        <h2 className="mb-2 text-lg font-semibold text-gray-800">
+      <Paper variant="outlined" sx={{ p: 3 }}>
+        <Typography variant="h6" component="h2" gutterBottom>
           Spending summary
-        </h2>
-        <p className="text-sm text-gray-500">
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
           No transactions yet. Connect your accounts to get started.
-        </p>
-      </div>
-    </div>
+        </Typography>
+      </Paper>
+    </Stack>
   )
 }
 
 function ProfileRow({ label, value }: { label: string; value: string }) {
   return (
-    <div>
-      <dt className="text-xs font-medium uppercase tracking-wide text-gray-400">
+    <Box component="div">
+      <Typography component="dt" variant="overline" color="text.secondary">
         {label}
-      </dt>
-      <dd className="mt-0.5 text-sm text-gray-700">{value}</dd>
-    </div>
+      </Typography>
+      <Typography component="dd" variant="body2" sx={{ m: 0 }}>
+        {value}
+      </Typography>
+    </Box>
   )
 }

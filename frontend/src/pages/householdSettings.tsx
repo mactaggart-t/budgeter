@@ -8,12 +8,12 @@ import {
   type InviteResponse,
 } from "@/store/householdApi";
 import {
-  Box,
   Button,
   TextField,
   Typography,
   Paper,
   Container,
+  Divider,
   Stack,
   Chip,
   Alert,
@@ -89,29 +89,36 @@ export default function HouseholdSettings() {
   }
 
   return (
-    <Container maxWidth="lg" sx={{ py: 8 }}>
-      <Paper sx={{ p: 4 }}>
-        <Stack spacing={2}>
-          <Typography variant="overline">Household</Typography>
-          <Typography variant="h5">{household.name}</Typography>
+    <Container maxWidth="md" sx={{ py: { xs: 3, sm: 6 } }}>
+      <Paper sx={{ p: { xs: 2.5, sm: 4 } }}>
+        <Stack spacing={4} divider={<Divider flexItem />}>
+          <Stack spacing={0.5}>
+            <Typography variant="overline" color="text.secondary">
+              Household
+            </Typography>
+            <Typography variant="h5" component="h1">
+              {household.name}
+            </Typography>
+          </Stack>
 
-          <Box>
-            <Typography variant="subtitle1" gutterBottom>
+          <Stack spacing={2}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
               Members
             </Typography>
-            <Stack spacing={1}>
+            <Stack spacing={1.5}>
               {(members ?? []).map((m) => {
                 const isYou = m.email === auth0User?.email;
                 return (
-                  <Stack key={m.id} direction="row" spacing={2}>
-                    {/* <Avatar src={m.avatar ?? undefined} alt={m.display_name ?? m.email} /> */}
-                    <Box sx={{ flex: 1 }}>
-                      <Typography>{m.display_name ?? m.email}</Typography>
-                      <Typography variant="body2" color="text.secondary">
-                        {m.email}
-                      </Typography>
-                    </Box>
-                    <Stack direction="row" spacing={1}>
+                  <Stack
+                    key={m.id}
+                    direction="row"
+                    spacing={2}
+                    sx={{ alignItems: "center", justifyContent: "space-between" }}
+                  >
+                    <Typography sx={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis" }}>
+                      {m.display_name ?? m.email}
+                    </Typography>
+                    <Stack direction="row" spacing={1} sx={{ flexShrink: 0 }}>
                       {isYou && <Chip label="you" size="small" />}
                       {m.id === household.created_by && <Chip label="owner" size="small" color="warning" />}
                     </Stack>
@@ -119,19 +126,24 @@ export default function HouseholdSettings() {
                 );
               })}
             </Stack>
-          </Box>
+          </Stack>
 
-          <Box>
-            <Typography variant="subtitle1" gutterBottom>
-              Invite someone
-            </Typography>
-            <Typography color="text.secondary" variant="body2">
-              They'll receive a link to join your household. The invite expires in 48 hours.
-            </Typography>
+          <Stack spacing={2}>
+            <Stack spacing={0.5}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+                Invite someone
+              </Typography>
+              <Typography color="text.secondary" variant="body2">
+                Enter their email to create an invite link, then share it with them. The link only works for that
+                email address and expires in 48 hours.
+              </Typography>
+            </Stack>
 
             <Stack direction={{ xs: "column", sm: "row" }} spacing={2}>
               <TextField
                 placeholder="email@example.com"
+                type="email"
+                size="small"
                 value={inviteEmail}
                 onChange={(e) => setInviteEmail(e.target.value)}
                 onKeyDown={(e) => e.key === "Enter" && handleInvite(e)}
@@ -143,46 +155,60 @@ export default function HouseholdSettings() {
                 onClick={() => handleInvite()}
                 disabled={inviteLoading || !inviteEmail.trim()}
                 startIcon={inviteLoading ? <CircularProgress color="inherit" size={16} /> : null}
+                sx={{ minWidth: 120, flexShrink: 0 }}
               >
                 Invite
               </Button>
             </Stack>
 
-            {inviteErrorMessage && <Alert severity="error" sx={{ mt: 2 }}>{inviteErrorMessage}</Alert>}
+            {inviteErrorMessage && <Alert severity="error">{inviteErrorMessage}</Alert>}
 
             {inviteResult && inviteLink && (
-              <Paper variant="outlined" sx={{ mt: 2, p: 2 }}>
-                <Stack direction="row" sx={{alignItems: 'center'}} spacing={2}>
-                  <Typography sx={{ fontFamily: "monospace", overflow: "hidden", textOverflow: "ellipsis" }}>
-                    {inviteLink}
+              <Paper variant="outlined" sx={{ p: 2 }}>
+                <Stack spacing={1}>
+                  <Stack direction="row" spacing={1} sx={{ alignItems: "center" }}>
+                    <Typography
+                      variant="body2"
+                      sx={{ flex: 1, minWidth: 0, fontFamily: "monospace", overflowWrap: "anywhere" }}
+                    >
+                      {inviteLink}
+                    </Typography>
+                    <IconButton onClick={copyInviteLink} aria-label="copy" size="small">
+                      <ContentCopyIcon fontSize="small" />
+                    </IconButton>
+                  </Stack>
+                  <Typography variant="caption" color="text.secondary">
+                    Expires {new Date(inviteResult.expires_at).toLocaleString()}
                   </Typography>
-                  <IconButton onClick={copyInviteLink} aria-label="copy">
-                    <ContentCopyIcon />
-                  </IconButton>
                 </Stack>
-                <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                  Expires {new Date(inviteResult.expires_at).toLocaleString()}
-                </Typography>
               </Paper>
             )}
-          </Box>
+          </Stack>
 
-          <Box>
-            <Typography variant="subtitle1" color="error" gutterBottom>
-              Leave household
-            </Typography>
-            <Typography color="text.secondary" variant="body2">
-              You'll lose access to shared data. If you're the last member, the household will be permanently deleted.
-            </Typography>
+          <Stack spacing={2}>
+            <Stack spacing={0.5}>
+              <Typography variant="subtitle1" color="error" sx={{ fontWeight: 600 }}>
+                Leave household
+              </Typography>
+              <Typography color="text.secondary" variant="body2">
+                You'll lose access to shared data. If you're the last member, the household will be permanently
+                deleted.
+              </Typography>
+            </Stack>
 
-            {leaveErrorMessage && <Alert severity="error" sx={{ mb: 2 }}>{leaveErrorMessage}</Alert>}
+            {leaveErrorMessage && <Alert severity="error">{leaveErrorMessage}</Alert>}
 
             {!showLeaveConfirm ? (
-              <Button variant="outlined" color="error" onClick={() => setShowLeaveConfirm(true)}>
+              <Button
+                variant="outlined"
+                color="error"
+                onClick={() => setShowLeaveConfirm(true)}
+                sx={{ alignSelf: "flex-start" }}
+              >
                 Leave household
               </Button>
             ) : (
-              <Stack direction="row" spacing={2}>
+              <Stack direction="row" spacing={2} sx={{ alignItems: "center", flexWrap: "wrap", rowGap: 1 }}>
                 <Typography color="text.secondary">Are you sure?</Typography>
                 <Button variant="contained" color="error" onClick={handleLeave} disabled={leaveLoading}>
                   Yes, leave
@@ -190,7 +216,7 @@ export default function HouseholdSettings() {
                 <Button onClick={() => setShowLeaveConfirm(false)}>Cancel</Button>
               </Stack>
             )}
-          </Box>
+          </Stack>
         </Stack>
       </Paper>
 

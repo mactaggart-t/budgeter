@@ -13,6 +13,13 @@ class HouseholdResponse(BaseModel):
 
     model_config = {"from_attributes": True}
 
+class MemberResponse(BaseModel):
+    id: str
+    email: str
+    display_name: str | None = None
+
+    model_config = {"from_attributes": True}
+
 class InviteCreate(BaseModel):
     email: EmailStr
 

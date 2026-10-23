@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Box,
   Button,
@@ -28,11 +28,15 @@ export default function JoinHousehold({ token: initialToken, onBack }: Props) {
     if (status === 404) return "This invite link doesn't exist.";
     if (status === 410) return "This invite has expired or already been used.";
     if (status === 409) return "You're already in a household.";
+    if (status === 403) return (error as any)?.data?.detail ?? "This invite was sent to a different email address.";
     return (error as any)?.data?.detail ?? "Something went wrong.";
   })();
 
+  // Guards against StrictMode's double effect, which would submit the invite twice.
+  const autoJoined = useRef(false);
   useEffect(() => {
-    if (initialToken) {
+    if (initialToken && !autoJoined.current) {
+      autoJoined.current = true;
       joinHousehold({ token: initialToken });
     }
   }, [initialToken, joinHousehold]);
@@ -58,7 +62,7 @@ export default function JoinHousehold({ token: initialToken, onBack }: Props) {
             Enter your invite
           </Typography>
           <Typography color="text.secondary" variant="body2">
-            Paste the invite token from your email, or it may have been filled in automatically from your link.
+            Paste the invite token from your invite link (the part after "?token="), or it may have been filled in automatically.
           </Typography>
         </Box>
 
